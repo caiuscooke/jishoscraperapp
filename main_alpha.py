@@ -9,12 +9,12 @@ class JishoApp:
     def __init__(self, root: Tk):
         self.root = root
         self.title = "Jisho Auto Scraper 9000"
-        self.geometry = self.root.geometry("900x500")
         self.word_frame = tk.Frame(root)
         self.word_frame.pack(fill='both', expand=True, pady=20)
         self.word_list = []
         self.saved_data = {}
 
+        self.root.geometry("900x500")
         self.show_file_upload_screen()
 
     def show_file_upload_screen(self):

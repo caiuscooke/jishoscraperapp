@@ -47,7 +47,7 @@
         "kind": 6,
         "importPath": "main_alpha",
         "description": "main_alpha",
-        "peekOfCode": "class JishoApp:\n    def __init__(self, root: Tk):\n        self.root = root\n        self.title = \"Jisho Auto Scraper 9000\"\n        self.geometry = self.root.geometry(\"900x500\")\n        self.word_frame = tk.Frame(root)\n        self.word_frame.pack(fill='both', expand=True, pady=20)\n        self.word_list = []\n        self.saved_data = {}\n        self.show_file_upload_screen()",
+        "peekOfCode": "class JishoApp:\n    def __init__(self, root: Tk):\n        self.root = root\n        self.title = \"Jisho Auto Scraper 9000\"\n        self.word_frame = tk.Frame(root)\n        self.word_frame.pack(fill='both', expand=True, pady=20)\n        self.word_list = []\n        self.saved_data = {}\n        self.root.geometry(\"900x500\")\n        self.show_file_upload_screen()",
         "detail": "main_alpha",
         "documentation": {}
     },
