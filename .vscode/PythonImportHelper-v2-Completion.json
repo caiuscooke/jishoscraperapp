@@ -1,0 +1,136 @@
+[
+    {
+        "label": "tkinter",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "tkinter",
+        "description": "tkinter",
+        "detail": "tkinter",
+        "documentation": {}
+    },
+    {
+        "label": "filedialog",
+        "importPath": "tkinter",
+        "description": "tkinter",
+        "isExtraImport": true,
+        "detail": "tkinter",
+        "documentation": {}
+    },
+    {
+        "label": "csv",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "csv",
+        "description": "csv",
+        "detail": "csv",
+        "documentation": {}
+    },
+    {
+        "label": "requests",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "requests",
+        "description": "requests",
+        "detail": "requests",
+        "documentation": {}
+    },
+    {
+        "label": "save_selections",
+        "kind": 2,
+        "importPath": "main_alpha",
+        "description": "main_alpha",
+        "peekOfCode": "def save_selections(word, selected_defs, definitions):\n    saved_data[word] = [definition for var, definition in zip(\n        selected_defs, definitions) if var.get()]\ndef show_summary_screen():\n    word_frame.destroy()\n    summary_frame = tk.Frame(root)\n    summary_frame.pack(fill=\"both\", expand=True, pady=20)\n    tk.Label(summary_frame, text=\"Processing Complete!\").pack(pady=10)\n    tk.Label(summary_frame, text=\"Ready to generate CSV.\").pack(pady=10)\n    def generate_csv():",
+        "detail": "main_alpha",
+        "documentation": {}
+    },
+    {
+        "label": "show_summary_screen",
+        "kind": 2,
+        "importPath": "main_alpha",
+        "description": "main_alpha",
+        "peekOfCode": "def show_summary_screen():\n    word_frame.destroy()\n    summary_frame = tk.Frame(root)\n    summary_frame.pack(fill=\"both\", expand=True, pady=20)\n    tk.Label(summary_frame, text=\"Processing Complete!\").pack(pady=10)\n    tk.Label(summary_frame, text=\"Ready to generate CSV.\").pack(pady=10)\n    def generate_csv():\n        with open(\"output.csv\", \"w\", newline=\"\", encoding=\"utf-8\") as csvfile:\n            writer = csv.writer(csvfile)\n            writer.writerow([\"Word\", \"Selected Definitions\"])",
+        "detail": "main_alpha",
+        "documentation": {}
+    },
+    {
+        "label": "validate_data",
+        "kind": 2,
+        "importPath": "main_alpha",
+        "description": "main_alpha",
+        "peekOfCode": "def validate_data(data):\n    japanese = data.get('japanese')\n    for each in japanese:\n        if each.get('reading') is None:\n            return False\n    return True\ndef show_reading_variations(selected_word_data, index):\n    word_frame.destroy()\n    word_frame = tk.Frame(root)\n    word_frame.pack(fill=\"both\", expand=True, pady=20)",
+        "detail": "main_alpha",
+        "documentation": {}
+    },
+    {
+        "label": "show_reading_variations",
+        "kind": 2,
+        "importPath": "main_alpha",
+        "description": "main_alpha",
+        "peekOfCode": "def show_reading_variations(selected_word_data, index):\n    word_frame.destroy()\n    word_frame = tk.Frame(root)\n    word_frame.pack(fill=\"both\", expand=True, pady=20)\n    word = selected_word_data.get('japanese')\n    tk.Label(word_frame, text=f\"Word {\n        index+1}/{len(word_list)}: {word}\").pack(pady=10)\n    if len(word) > 1:\n        for variant in word:\n            for kanji in variant.get('word'):",
+        "detail": "main_alpha",
+        "documentation": {}
+    },
+    {
+        "label": "show_candidates",
+        "kind": 2,
+        "importPath": "main_alpha",
+        "description": "main_alpha",
+        "peekOfCode": "def show_candidates(index):\n    word_frame.destroy()\n    word_frame = tk.Frame(root)\n    word_frame.pack(fill=\"both\", expand=True, pady=20)\n    if index < len(word_list):\n        word = word_list[index]\n        tk.Label(word_frame, text=f\"Word {\n                 index+1}/{len(word_list)}: {word}\").pack(pady=10)\n        url = f'https://jisho.org/api/v1/search/words?keyword={word}'\n        response = requests.get(url)",
+        "detail": "main_alpha",
+        "documentation": {}
+    },
+    {
+        "label": "open_file",
+        "kind": 2,
+        "importPath": "main_alpha",
+        "description": "main_alpha",
+        "peekOfCode": "def open_file():\n    file_path = filedialog.askopenfilename(\n        title=\"Select a Text File\",\n        filetypes=[(\"Text Files\", \"*.txt\"), (\"All Files\", \"*.*\")]\n    )\n    if file_path:\n        with open(file_path, 'r', encoding=\"utf-8\") as file:\n            # Save words to a global list\n            word_list.extend(file.read().splitlines())\n        show_candidates(0)  # Move to the first word's screen",
+        "detail": "main_alpha",
+        "documentation": {}
+    },
+    {
+        "label": "show_file_upload_screen",
+        "kind": 2,
+        "importPath": "main_alpha",
+        "description": "main_alpha",
+        "peekOfCode": "def show_file_upload_screen():\n    tk.Button(word_frame, text=\"Browse\", command=open_file).pack()\nshow_file_upload_screen()\nroot.mainloop()",
+        "detail": "main_alpha",
+        "documentation": {}
+    },
+    {
+        "label": "root",
+        "kind": 5,
+        "importPath": "main_alpha",
+        "description": "main_alpha",
+        "peekOfCode": "root = tk.Tk()\nroot.title(\"Jisho Auto Scraper 0.0.1\")\nroot.geometry(\"900x500\")\nword_list = []  # Store words from the uploaded file\nsaved_data = {}  # Store user selections\nword_frame = tk.Frame(root)\nword_frame.pack(fill=\"both\", expand=True, pady=20)\ndef save_selections(word, selected_defs, definitions):\n    saved_data[word] = [definition for var, definition in zip(\n        selected_defs, definitions) if var.get()]",
+        "detail": "main_alpha",
+        "documentation": {}
+    },
+    {
+        "label": "word_list",
+        "kind": 5,
+        "importPath": "main_alpha",
+        "description": "main_alpha",
+        "peekOfCode": "word_list = []  # Store words from the uploaded file\nsaved_data = {}  # Store user selections\nword_frame = tk.Frame(root)\nword_frame.pack(fill=\"both\", expand=True, pady=20)\ndef save_selections(word, selected_defs, definitions):\n    saved_data[word] = [definition for var, definition in zip(\n        selected_defs, definitions) if var.get()]\ndef show_summary_screen():\n    word_frame.destroy()\n    summary_frame = tk.Frame(root)",
+        "detail": "main_alpha",
+        "documentation": {}
+    },
+    {
+        "label": "saved_data",
+        "kind": 5,
+        "importPath": "main_alpha",
+        "description": "main_alpha",
+        "peekOfCode": "saved_data = {}  # Store user selections\nword_frame = tk.Frame(root)\nword_frame.pack(fill=\"both\", expand=True, pady=20)\ndef save_selections(word, selected_defs, definitions):\n    saved_data[word] = [definition for var, definition in zip(\n        selected_defs, definitions) if var.get()]\ndef show_summary_screen():\n    word_frame.destroy()\n    summary_frame = tk.Frame(root)\n    summary_frame.pack(fill=\"both\", expand=True, pady=20)",
+        "detail": "main_alpha",
+        "documentation": {}
+    },
+    {
+        "label": "word_frame",
+        "kind": 5,
+        "importPath": "main_alpha",
+        "description": "main_alpha",
+        "peekOfCode": "word_frame = tk.Frame(root)\nword_frame.pack(fill=\"both\", expand=True, pady=20)\ndef save_selections(word, selected_defs, definitions):\n    saved_data[word] = [definition for var, definition in zip(\n        selected_defs, definitions) if var.get()]\ndef show_summary_screen():\n    word_frame.destroy()\n    summary_frame = tk.Frame(root)\n    summary_frame.pack(fill=\"both\", expand=True, pady=20)\n    tk.Label(summary_frame, text=\"Processing Complete!\").pack(pady=10)",
+        "detail": "main_alpha",
+        "documentation": {}
+    }
+]
