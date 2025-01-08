@@ -9,11 +9,12 @@ import requests
 class JishoApp:
     def __init__(self, root: Tk):
         self.root = root
-        self.title = "Jisho Auto Scraper 9000"
+        self.root.title('J2A')
         self.word_frame = tk.Frame(root)
         self.word_frame.pack(fill='both', expand=True, pady=20)
         self.word_list = []
         self.saved_data = {}
+        self.theme_name = 'dark'
 
         self.root.geometry("1400x1000")
         self.show_file_upload_screen()
@@ -24,8 +25,11 @@ class JishoApp:
                                    weight=font.NORMAL)
 
     def show_file_upload_screen(self):
+        self.grid_setup()
+        tk.Label(self.word_frame,
+                 text='Welcome to J2A!\nBrowse to upload a txt file to get started').grid(row=0, column=1, sticky='s')
         tk.Button(self.word_frame, text="Browse",
-                  command=self.open_file).pack()
+                  command=self.open_file).grid(row=1, column=1, sticky='n')
 
     def open_file(self):
         file_path = filedialog.askopenfilename(
@@ -42,10 +46,29 @@ class JishoApp:
         self.word_frame.destroy()
         self.word_frame = tk.Frame(self.root)
         self.word_frame.pack(fill='both', expand=True)
+        self.word_frame.after(50, self.change_theme)
         self.word_frame.columnconfigure((0, 2), weight=1, uniform='a')
         self.word_frame.columnconfigure(1, weight=3, uniform='a')
         self.word_frame.rowconfigure((0, 2), weight=1, uniform='a')
         self.word_frame.rowconfigure(1, weight=3, uniform='a')
+
+    def change_theme(self):
+        background_color = ''
+        text_color = ''
+        if self.theme_name == 'dark':
+            background_color = '#131417'
+            text_color = '#e5ffff'
+
+        def recursive_theme_set(frame):
+            frame.configure(bg=background_color)
+            for child in frame.winfo_children():
+                try:
+                    child.configure(bg=background_color, fg=text_color)
+                except:
+                    child.configure(bg=background_color)
+                    recursive_theme_set(child)
+
+        recursive_theme_set(self.word_frame)
 
     def header_setup(self, word, index):
         header = tk.Label(self.word_frame, text=(
@@ -78,6 +101,11 @@ class JishoApp:
                 return f'Error: {response.status_code}'
 
             data = response.json().get('data')
+
+            if index > 0:
+                back_button = tk.Button(self.word_frame, text='back',
+                                        command=lambda: self.show_previous(index))
+                back_button.grid(row=2, column=0, sticky='nsew')
 
             if len(data) > 1:  # data > 1 means that there is more than 1 result for the requested word
                 candidates = []
@@ -141,7 +169,13 @@ class JishoApp:
                             canvas, text=numbered_defs_str)
                         definitions_label.grid(row=1+ind, column=2, sticky='w')
                 elif len(candidates) == 1:
-                    self.show_reading_variations(candidates[0], index)
+                    readings = candidates[0].get('japanese')
+                    definitions = candidates[0].get('senses')
+                    if len(readings) > 1:
+                        self.show_reading_variations(candidates[0], index)
+                    elif len(definitions) > 1:
+                        self.save_variations(word, readings)
+                        self.show_definitions(candidates[0], index)
 
             elif len(data) == 1:
                 reading_variations = data[0].get('japanese')
@@ -149,6 +183,7 @@ class JishoApp:
                 if len(reading_variations) > 1:
                     self.show_reading_variations(data[0], index)
                 elif len(definitions) > 1:
+                    self.save_variations(word, reading_variations)
                     self.show_definitions(data[0], index)
                 elif len(definitions) != 0 and len(reading_variations) != 0:
                     self.save_unique(word, data[0], index)
@@ -167,7 +202,7 @@ class JishoApp:
         self.header_setup(word, index)
         label = tk.Label(self.word_frame, wraplength=300, justify='center',
                          text='Choose the Kanji/Reading variants you would like to save')
-        label.grid(row=1, column=0, sticky='nsew')
+        label.grid(row=1, column=0, padx=10, pady=10, sticky='nsew')
         label.bind('<Configure>', lambda e: label.config(
             wraplength=label.winfo_width()))
         canvas = self.create_scrollable_canvas()
@@ -179,7 +214,8 @@ class JishoApp:
             var = tk.BooleanVar()
             checkbox = tk.Checkbutton(
                 canvas, text=f'{variation.get('word')} {variation.get('reading')}', variable=var)
-            checkbox.grid(row=0+ind, column=0, columnspan=3, sticky='ew')
+            checkbox.grid(row=0+ind, column=0, columnspan=3,
+                          padx=10, pady=10, sticky='ew')
             selected_variations.append(var)
 
         def advance_button():
@@ -195,7 +231,7 @@ class JishoApp:
                 self.show_word_summary(word, index)
 
         definitions = selected_word_data.get('senses')
-        tk.Button(self.word_frame, text='Advance',
+        tk.Button(self.word_frame, text='Next',
                   command=advance_button).grid(row=2, column=1)
 
     def show_definitions(self, candidate, index):
@@ -209,10 +245,12 @@ class JishoApp:
             'english_definitions') for definition in candidate.get('senses')]
         selected_definitions = []
         for ind, definition in enumerate(definitions_list):
+            formatted_def = f'{ind+1}) {", ".join(definition)}'
             var = tk.BooleanVar()
             checkbox = Checkbutton(
-                canvas, text=definition, variable=var)
-            checkbox.grid(row=ind+1, column=0, columnspan=3, sticky='w')
+                canvas, text=formatted_def, variable=var)
+            checkbox.grid(row=ind+1, column=0, columnspan=3,
+                          padx=10, pady=10, sticky='w')
             selected_definitions.append(var)
 
         def next_button():
@@ -221,11 +259,10 @@ class JishoApp:
             self.save_definitions(word, extracted)
             self.show_word_summary(word, index)
 
-        tk.Button(self.word_frame, text='Next Word',
+        tk.Button(self.word_frame, text='Confirmation Screen',
                   command=next_button).grid(row=2, column=1)
 
-    def csv_column_builder(self, word_info, key_name):
-        value = word_info.get(key_name)
+    def csv_column_builder(self, value, key_name):
         if value:
             if key_name != 'definitions':
                 return "・".join(value)
@@ -235,10 +272,19 @@ class JishoApp:
     def generate_csv(self):
         with open("output.csv", "w", newline="", encoding="utf-8") as csvfile:
             writer = csv.writer(csvfile)
-            for word_info in self.saved_data.values():
-                row = [self.csv_column_builder(word_info, 'kanji'),
-                       self.csv_column_builder(word_info, 'kana'),
-                       self.csv_column_builder(word_info, 'definitions')]
+            for word_key in self.saved_data:
+                word_data = self.saved_data.get(word_key)
+                kanji = word_data.get('kanji')
+                print(kanji)
+                kana = word_data.get('kana')
+                print(kana)
+                definitions = word_data.get('definitions')
+                if len(kanji) == 0:
+                    kanji = kana
+                    kana = []
+                row = [self.csv_column_builder(kanji, 'kanji'),
+                       self.csv_column_builder(kana, 'kana'),
+                       self.csv_column_builder(definitions, 'definitions')]
 
                 writer.writerow(row)
         tk.Label(self.word_frame, text="CSV Generated: output.csv").grid(
@@ -275,8 +321,10 @@ class JishoApp:
             kana = term.get('reading')
             if kana:
                 kana_selections.append(kana)
-        self.saved_data.setdefault(word, {})['kanji'] = kanji_selections
-        self.saved_data.setdefault(word, {})['kana'] = kana_selections
+        self.saved_data.setdefault(
+            word, {})['kanji'] = list(set(kanji_selections))
+        self.saved_data.setdefault(
+            word, {})['kana'] = list(set(kana_selections))
 
     def save_definitions(self, word, terms):
         selected_defs_list = [
@@ -299,18 +347,36 @@ class JishoApp:
             row=0, column=1)
         canvas = self.create_scrollable_canvas()
         word_summary = self.saved_data.get(word)
-        for row, each in enumerate(word_summary):
+        text_box_tracker = {}
+        for row, key in enumerate(word_summary):
+
             canvas.rowconfigure(row+1, weight=1, uniform='a')
-            tk.Label(canvas, text=each).grid(row=row, column=0, sticky='e')
+            tk.Label(canvas, text=key).grid(row=row, column=0, sticky='e')
             text_box = tk.Text(canvas, wrap='word', height=4, width=50)
             text_box.grid(row=row, column=1, columnspan=2)
-            text_box.insert("1.0", word_summary.get(each))
+            entry = word_summary.get(key)
+            if entry:
+                entry = "\n".join(entry)
+                text_box.insert("1.0", entry)
+                text_box_tracker[key] = text_box
+
+        def update_changes():
+            for key in text_box_tracker:
+                text = text_box_tracker.get(key).get(1.0, 'end-1c')
+                print(text)
+                text = text.split('\n')
+                self.saved_data[word][key] = text
+                print(self.saved_data.get(word))
 
         canvas.config(scrollregion=canvas.bbox("all"))
-        tk.Button(self.word_frame, text='Next Word',
-                  command=lambda: self.show_possible_matches(index+1)).grid(row=2, column=1)
+        tk.Button(self.word_frame, text='Save Changes and Continue',
+                  command=lambda: [update_changes(), self.show_possible_matches(index+1)]).grid(row=2, column=1)
+
+    def show_previous(self, index):
+        self.show_possible_matches(index-1)
 
 
 root = Tk()
 app = JishoApp(root)
+
 root.mainloop()
