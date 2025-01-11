@@ -1,5 +1,77 @@
 [
     {
+        "label": "*",
+        "importPath": "customtkinter",
+        "description": "customtkinter",
+        "isExtraImport": true,
+        "detail": "customtkinter",
+        "documentation": {}
+    },
+    {
+        "label": "CTkCheckBox",
+        "importPath": "customtkinter",
+        "description": "customtkinter",
+        "isExtraImport": true,
+        "detail": "customtkinter",
+        "documentation": {}
+    },
+    {
+        "label": "CTk",
+        "importPath": "customtkinter",
+        "description": "customtkinter",
+        "isExtraImport": true,
+        "detail": "customtkinter",
+        "documentation": {}
+    },
+    {
+        "label": "CTkButton",
+        "importPath": "customtkinter",
+        "description": "customtkinter",
+        "isExtraImport": true,
+        "detail": "customtkinter",
+        "documentation": {}
+    },
+    {
+        "label": "CTkFont",
+        "importPath": "customtkinter",
+        "description": "customtkinter",
+        "isExtraImport": true,
+        "detail": "customtkinter",
+        "documentation": {}
+    },
+    {
+        "label": "CTkFrame",
+        "importPath": "customtkinter",
+        "description": "customtkinter",
+        "isExtraImport": true,
+        "detail": "customtkinter",
+        "documentation": {}
+    },
+    {
+        "label": "CTkLabel",
+        "importPath": "customtkinter",
+        "description": "customtkinter",
+        "isExtraImport": true,
+        "detail": "customtkinter",
+        "documentation": {}
+    },
+    {
+        "label": "CTkScrollableFrame",
+        "importPath": "customtkinter",
+        "description": "customtkinter",
+        "isExtraImport": true,
+        "detail": "customtkinter",
+        "documentation": {}
+    },
+    {
+        "label": "CTkTextbox",
+        "importPath": "customtkinter",
+        "description": "customtkinter",
+        "isExtraImport": true,
+        "detail": "customtkinter",
+        "documentation": {}
+    },
+    {
         "label": "csv",
         "kind": 6,
         "isExtraImport": true,
@@ -18,15 +90,7 @@
         "documentation": {}
     },
     {
-        "label": "Checkbutton",
-        "importPath": "tkinter",
-        "description": "tkinter",
-        "isExtraImport": true,
-        "detail": "tkinter",
-        "documentation": {}
-    },
-    {
-        "label": "Tk",
+        "label": "FLAT",
         "importPath": "tkinter",
         "description": "tkinter",
         "isExtraImport": true,
@@ -35,14 +99,6 @@
     },
     {
         "label": "filedialog",
-        "importPath": "tkinter",
-        "description": "tkinter",
-        "isExtraImport": true,
-        "detail": "tkinter",
-        "documentation": {}
-    },
-    {
-        "label": "font",
         "importPath": "tkinter",
         "description": "tkinter",
         "isExtraImport": true,
@@ -59,11 +115,38 @@
         "documentation": {}
     },
     {
+        "label": "print_bbox",
+        "kind": 2,
+        "importPath": "grid_testing",
+        "description": "grid_testing",
+        "peekOfCode": "def print_bbox(event, frame: CTkFrame):\n    for row in range(10):\n        for column in range(10):\n            x, y, width, height = frame.bbox(row=row, column=column)\n            print(f'Coords {row}/{column}')\n            print(f'Width: {width}')\n            print(f'Height: {height}')\nroot = CTk()\nframe = CTkFrame(root)\nframe.pack(fill='both', expand=True)",
+        "detail": "grid_testing",
+        "documentation": {}
+    },
+    {
+        "label": "root",
+        "kind": 5,
+        "importPath": "grid_testing",
+        "description": "grid_testing",
+        "peekOfCode": "root = CTk()\nframe = CTkFrame(root)\nframe.pack(fill='both', expand=True)\nframe.grid_columnconfigure([i for i in range(10)], uniform='a', weight=1)\nframe.grid_rowconfigure([i for i in range(10)], uniform='a', weight=1)\nfor row in range(10):\n    for column in range(10):\n        if row % 2 == 0:\n            if column % 2 == 0:\n                CTkLabel(frame, text=column, bg_color='black').grid(",
+        "detail": "grid_testing",
+        "documentation": {}
+    },
+    {
+        "label": "frame",
+        "kind": 5,
+        "importPath": "grid_testing",
+        "description": "grid_testing",
+        "peekOfCode": "frame = CTkFrame(root)\nframe.pack(fill='both', expand=True)\nframe.grid_columnconfigure([i for i in range(10)], uniform='a', weight=1)\nframe.grid_rowconfigure([i for i in range(10)], uniform='a', weight=1)\nfor row in range(10):\n    for column in range(10):\n        if row % 2 == 0:\n            if column % 2 == 0:\n                CTkLabel(frame, text=column, bg_color='black').grid(\n                    row=row, column=column, sticky='nsew')",
+        "detail": "grid_testing",
+        "documentation": {}
+    },
+    {
         "label": "JishoApp",
         "kind": 6,
         "importPath": "main_alpha",
         "description": "main_alpha",
-        "peekOfCode": "class JishoApp:\n    def __init__(self, root: Tk):\n        self.root = root\n        self.root.title('J2A')\n        self.word_frame = tk.Frame(root)\n        self.word_frame.pack(fill='both', expand=True, pady=20)\n        self.word_list = []\n        self.saved_data = {}\n        self.theme_name = 'dark'\n        self.root.geometry(\"1400x1000\")",
+        "peekOfCode": "class JishoApp:\n    def __init__(self, root: CTk):\n        self.root = root\n        self.root.title('J2A')\n        self.word_frame = CTkFrame(root)\n        self.word_frame.pack(fill='both', expand=True, pady=20)\n        self.word_list = []\n        self.saved_data = {}\n        self.root.geometry(\"900x500\")\n        self.defaultFont = CTkFont(",
         "detail": "main_alpha",
         "documentation": {}
     },
@@ -72,7 +155,7 @@
         "kind": 5,
         "importPath": "main_alpha",
         "description": "main_alpha",
-        "peekOfCode": "root = Tk()\napp = JishoApp(root)\nroot.mainloop()",
+        "peekOfCode": "root = CTk()\napp = JishoApp(root)\nroot.mainloop()",
         "detail": "main_alpha",
         "documentation": {}
     },
