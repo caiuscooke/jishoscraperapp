@@ -95,8 +95,9 @@ class JishoApp:
         return _button
 
     def app_main_loop(self, index):
-        if index > len(self.word_list):
+        if index >= len(self.word_list):
             self.show_summary_screen()
+            return
 
         self.grid_setup()
 
@@ -127,19 +128,19 @@ class JishoApp:
 
                     if len(reading_variations) > 1:
                         variant_button = self.instatiate_button(
-                            scrollframe, index=index)
+                            scrollframe, index=ind)
                         variant_button.configure(
                             command=lambda candidate=candidate:
                             self.show_reading_variations(candidate, index))
                     elif len(reading_variations) == 1 and len(definition_variations) > 1:
                         definitions_button = self.instatiate_button(
-                            scrollframe, index=index)
+                            scrollframe, index=ind)
                         definitions_button.configure(
                             command=lambda candidate=candidate:
                             self.show_definitions(candidate, index))
                     elif len(reading_variations) != 0 and len(definition_variations) != 0:
                         uniques_button = self.instatiate_button(
-                            scrollframe, index=index)
+                            scrollframe, index=ind)
                         uniques_button.configure(
                             command=lambda candidate=candidate:
                             self.save_unique(word, candidate, index))
