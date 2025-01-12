@@ -38,7 +38,7 @@ class JishoApp:
         if file_path:
             with open(file_path, 'r', encoding="utf-8") as file:
                 self.word_list.extend(file.read().splitlines())
-            self.show_possible_matches(0)
+            self.app_main_loop(0)
 
     def grid_setup(self):
         self.word_frame.destroy()
@@ -66,133 +66,145 @@ class JishoApp:
 
         return scrollable_frame
 
-    def show_possible_matches(self, index):
+    def retrieve_candidates(self, data: dict, word: str):
+        candidates = []
+        for possible_match in data:
+            reading_variations = possible_match.get('japanese')
+            for term in reading_variations:
+                kanji = term.get('word')
+                reading = term.get('reading')
+                if kanji == word or reading == word:
+                    candidates.append(possible_match)
+                    break
+        return candidates
+
+    def send_jisho_api_get(self, index, word):
+        word = self.word_list[index]
+        self.header_setup(word, index)
+        url = f'https://jisho.org/api/v1/search/words?keyword={word}'
+        response = requests.get(url)
+        if response.status_code != 200:
+            return f'Error: {response.status_code}'
+
+        return response.json().get('data')
+
+    def instatiate_button(self, master, index):
+        _button = CTkButton(master=master, text=(
+            'Candidate' + f' {index + 1}'), font=self.defaultFont)
+        _button.grid(row=index, column=0, columnspan=3, padx=10, pady=10)
+        return _button
+
+    def app_main_loop(self, index):
+        if index > len(self.word_list):
+            self.show_summary_screen()
+
         self.grid_setup()
-        if index < len(self.word_list):
-            word = self.word_list[index]
-            self.header_setup(word, index)
-            url = f'https://jisho.org/api/v1/search/words?keyword={word}'
-            response = requests.get(url)
-            if response.status_code != 200:
-                return f'Error: {response.status_code}'
 
-            data = response.json().get('data')
+        word = self.word_list[index]
+        data = self.send_jisho_api_get(index=index, word=word)
 
-            if len(data) > 1:  # data > 1 means that there is more than 1 result for the requested word
-                candidates = []
-                for possible_match in data:
-                    reading_variations = possible_match.get('japanese')
-                    for term in reading_variations:
-                        kanji = term.get('word')
-                        reading = term.get('reading')
-                        if kanji == word or reading == word:
-                            candidates.append(possible_match)
-                            break
-                if len(candidates) > 1:
-                    scrollframe = self.create_scrollable_frame()
-                    scrollframe.configure(
-                        label_text='Choose which of the following matches you want to add')
-                    for ind, candidate in enumerate(candidates):
-                        reading_variations = candidate.get('japanese')
-                        reading_variations_list = []
-                        for variant in reading_variations:
-                            kanji = variant.get('word')
-                            kana = variant.get('reading')
-                            if kanji and kana:
-                                reading_variations_list.append(
-                                    f'{kanji}|{kana}')
+        if len(data) > 1:
+            candidates = self.retrieve_candidates(data=data, word=word)
+            if len(candidates) > 1:
+                scrollframe = self.create_scrollable_frame()
+                scrollframe.configure(
+                    label_text='Choose which of the following matches you want to add')
+                for ind, candidate in enumerate(candidates):
+                    reading_variations = candidate.get('japanese')
+                    reading_variations_list = []
+                    for variant in reading_variations:
+                        kanji = variant.get('word')
+                        kana = variant.get('reading')
+                        if kanji and kana:
+                            reading_variations_list.append(
+                                f'{kanji}|{kana}')
 
-                        definition_variations = candidate.get('senses')
-                        definitions = []
-                        for sense in definition_variations:
-                            definitions.append(', '.join(
-                                sense.get('english_definitions')))
+                    definition_variations = candidate.get('senses')
+                    definitions = []
+                    for sense in definition_variations:
+                        definitions.append(', '.join(
+                            sense.get('english_definitions')))
 
-                        if len(reading_variations) > 1:
-                            CTkButton(scrollframe,
-                                      text=('Candidate' + f' {ind + 1}'),
-                                      command=lambda candidate=candidate:
-                                      self.show_reading_variations(
-                                          candidate, index), font=self.defaultFont
-                                      ).grid(row=ind, column=0, columnspan=3, padx=10, pady=10)
-                        elif len(reading_variations) == 1 and len(definition_variations) > 1:
-                            CTkButton(scrollframe,
-                                      text=('Candidate' + f' {ind + 1}'),
-                                      command=lambda candidate=candidate:
-                                      self.show_definitions(
-                                          candidate, index), font=self.defaultFont
-                                      ).grid(row=ind, column=0, columnspan=3, padx=10, pady=10)
-                        elif len(reading_variations) != 0 and len(definition_variations) != 0:
-                            CTkButton(scrollframe,
-                                      text=('Candidate' + f' {ind + 1}'),
-                                      command=lambda candidate=candidate:
-                                      self.save_unique(word, candidate, index), font=self.defaultFont
-                                      ).grid(row=ind, column=0, columnspan=3, padx=10, pady=10)
+                    if len(reading_variations) > 1:
+                        variant_button = self.instatiate_button(
+                            scrollframe, index=index)
+                        variant_button.configure(
+                            command=lambda candidate=candidate:
+                            self.show_reading_variations(candidate, index))
+                    elif len(reading_variations) == 1 and len(definition_variations) > 1:
+                        definitions_button = self.instatiate_button(
+                            scrollframe, index=index)
+                        definitions_button.configure(
+                            command=lambda candidate=candidate:
+                            self.show_definitions(candidate, index))
+                    elif len(reading_variations) != 0 and len(definition_variations) != 0:
+                        uniques_button = self.instatiate_button(
+                            scrollframe, index=index)
+                        uniques_button.configure(
+                            command=lambda candidate=candidate:
+                            self.save_unique(word, candidate, index))
 
-                        label = CTkLabel(
-                            scrollframe,
-                            wraplength=200,
-                            text="\n".join(reading_variations_list), font=self.defaultFont,
-                            anchor='w'
-                        )
-                        label.grid(row=ind, column=3,  columnspan=3,
-                                   sticky='nsew', padx=10, pady=10)
+                    label = CTkLabel(
+                        scrollframe,
+                        wraplength=200,
+                        text="\n".join(reading_variations_list),
+                        font=self.defaultFont,
+                        anchor='w'
+                    )
+                    label.grid(row=ind, column=3,  columnspan=3,
+                               sticky='nsew', padx=10, pady=10)
 
-                        numbered_definitions = [
-                            f'{num + 1}) {definition}' for num, definition in enumerate(definitions)]
-                        numbered_defs_str = " ".join(numbered_definitions)
+                    numbered_definitions = [
+                        f'{num + 1}) {definition}'
+                        for num, definition in enumerate(definitions)]
+                    numbered_defs_str = " ".join(numbered_definitions)
 
-                        definitions_label = CTkLabel(
-                            scrollframe, text=numbered_defs_str, font=self.defaultFont,
-                            anchor='w')
-                        definitions_label.grid(
-                            row=ind, column=6, columnspan=3, sticky='nsew', padx=10, pady=10)
-                elif len(candidates) == 1:
-                    readings = candidates[0].get('japanese')
-                    definitions = candidates[0].get('senses')
-                    if len(readings) > 1:
-                        self.show_reading_variations(candidates[0], index)
-                    elif len(definitions) > 1:
-                        self.save_variations(word, readings)
-                        self.show_definitions(candidates[0], index)
-                    else:
-                        self.save_unique(word, candidates[0], index)
-                else:
-                    scrollframe = self.create_scrollable_frame()
-                    scrollframe.columnconfigure(
-                        (0, 1, 2), weight='1', uniform='a')
-                    scrollframe.configure(
-                        label_text='Choose the word you want to add')
-                    for row, possible_match in enumerate(data):
-                        result = possible_match.get('slug')
-                        CTkButton(
-                            scrollframe, text=result,
-                            command=lambda result=result: change_search(
-                                result),
-                            font=self.defaultFont
-                        ).grid(row=row, column=4, columnspan=2, padx=10, pady=10)
-
-                    def change_search(word):
-                        self.word_list[index] = word
-                        self.show_possible_matches(index)
-
-            elif len(data) == 1:
-                reading_variations = data[0].get('japanese')
-                definitions = data[0].get('senses')
-                if len(reading_variations) > 1:
-                    self.show_reading_variations(data[0], index)
+                    definitions_label = CTkLabel(
+                        scrollframe, text=numbered_defs_str, font=self.defaultFont,
+                        anchor='w')
+                    definitions_label.grid(
+                        row=ind, column=6, columnspan=3, sticky='nsew', padx=10, pady=10)
+            elif len(candidates) == 1:
+                readings = candidates[0].get('japanese')
+                definitions = candidates[0].get('senses')
+                if len(readings) > 1:
+                    self.show_reading_variations(candidates[0], index)
                 elif len(definitions) > 1:
-                    self.save_variations(word, reading_variations)
-                    self.show_definitions(data[0], index)
-                elif len(definitions) != 0 and len(reading_variations) != 0:
-                    self.save_unique(word, data[0], index)
+                    self.save_variations(word, readings)
+                    self.show_definitions(candidates[0], index)
+                else:
+                    self.save_unique(word, candidates[0], index)
+            else:
+                scrollframe = self.create_scrollable_frame()
+                scrollframe.columnconfigure(
+                    (0, 1, 2), weight='1', uniform='a')
+                scrollframe.configure(
+                    label_text='Choose the word you want to add')
+                for row, possible_match in enumerate(data):
+                    result = possible_match.get('slug')
+                    CTkButton(
+                        scrollframe, text=result,
+                        command=lambda result=result: change_search(
+                            result),
+                        font=self.defaultFont
+                    ).grid(row=row, column=4, columnspan=2, padx=10, pady=10)
 
-            elif len(data) < 1:
-                # HANDLE SKIPPED WORDS HERE
-                self.show_possible_matches(index+1)
-
-        else:
-            self.show_summary_screen()  # Move to summary when all words are processed
+                def change_search(word):
+                    self.word_list[index] = word
+                    self.app_main_loop(index)
+        elif len(data) == 1:
+            reading_variations = data[0].get('japanese')
+            definitions = data[0].get('senses')
+            if len(reading_variations) > 1:
+                self.show_reading_variations(data[0], index)
+            elif len(definitions) > 1:
+                self.save_variations(word, reading_variations)
+                self.show_definitions(data[0], index)
+            elif len(definitions) != 0 and len(reading_variations) != 0:
+                self.save_unique(word, data[0], index)
+        elif len(data) < 1:
+            # HANDLE SKIPPED WORDS HERE
+            self.app_main_loop(index+1)
 
     def show_reading_variations(self, selected_word_data, index):
         self.grid_setup()
@@ -408,7 +420,7 @@ class JishoApp:
 
         CTkButton(self.word_frame, text='Save Changes and Continue',
                   command=lambda: [
-                      update_changes(), self.show_possible_matches(index+1)],
+                      update_changes(), self.app_main_loop(index+1)],
                   font=self.defaultFont).grid(row=2, column=1)
 
     def show_summary_screen(self):
