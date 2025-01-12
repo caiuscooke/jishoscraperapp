@@ -1,6 +1,6 @@
 import csv
 import tkinter as tk
-from tkinter import FLAT, filedialog
+from tkinter import filedialog
 
 import requests
 from customtkinter import (CTkCheckBox, CTk, CTkButton, CTkFont, CTkFrame,
@@ -19,7 +19,7 @@ class JishoApp:
         self.root.geometry("900x500")
 
         self.defaultFont = CTkFont(
-            'Microsoft Sans Serif', size=16, weight='normal')
+            'Microsoft Sans Serif', size=20, weight='normal')
         self.show_file_upload_screen()
 
     def show_file_upload_screen(self):
@@ -215,7 +215,8 @@ class JishoApp:
             if kanji == slug or kana == slug:
                 text += ' (main reading)'
             checkbox = CTkCheckBox(
-                scrollframe, text=text,
+                scrollframe,
+                font=self.defaultFont, text=text,
                 variable=var)
             checkbox.grid(row=ind, column=3, columnspan=6,
                           padx=10, pady=10, sticky='nsew')
@@ -268,6 +269,7 @@ class JishoApp:
 
             var = tk.BooleanVar()
             checkbox = CTkCheckBox(scrollframe,
+                                   font=self.defaultFont,
                                    text=None, variable=var)
             checkbox.grid(row=ind, column=1, sticky='e',
                           padx=(10, 0), pady=10)
@@ -388,7 +390,7 @@ class JishoApp:
             CTkLabel(scrollframe, text=key, font=self.defaultFont).grid(
                 row=row, column=0, columnspan=2, sticky='nsew')
             text_box = CTkTextbox(scrollframe, wrap='word',
-                                  height=50, font=self.defaultFont)
+                                  height=80, font=self.defaultFont)
             text_box.grid(row=row, column=2, columnspan=7,
                           pady=10, sticky='nsew')
             entry = word_summary.get(key)
@@ -474,7 +476,7 @@ class JishoApp:
 
         # Inform the user that the file has been saved
         CTkLabel(self.word_frame, text=f"CSV Generated: {file_path}", font=self.defaultFont).grid(
-            row=2, column=0
+            row=2, column=1
         )
 
 

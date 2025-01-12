@@ -90,14 +90,6 @@
         "documentation": {}
     },
     {
-        "label": "FLAT",
-        "importPath": "tkinter",
-        "description": "tkinter",
-        "isExtraImport": true,
-        "detail": "tkinter",
-        "documentation": {}
-    },
-    {
         "label": "filedialog",
         "importPath": "tkinter",
         "description": "tkinter",
