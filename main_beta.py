@@ -56,7 +56,8 @@ class JishoApp(ctk.CTk):
         if self.current_word:
             ctk.CTkLabel(
                 self.main_frame,
-                text=f'Searching for: {self.current_word}',
+                text=f'Searching for: {self.current_word}\n{
+                    self.word_number+1}/{len(self.word_list)}',
                 font=self.defaultFont
             ).grid(
                 row=0,
@@ -123,6 +124,9 @@ class JishoApp(ctk.CTk):
             'readings') if reading[0] is not None]))
         kana = list(set([reading[1] for reading in word_data.get(
             'readings') if reading[1] is not None]))
+        if len(kanji) == 0 and len(kana) >= 1:
+            kanji = kana[:]
+            kana = []
         parts_of_speech = []
         for parts_list in word_data.get('parts_of_speech'):
             parts_of_speech += parts_list
@@ -173,7 +177,7 @@ class JishoApp(ctk.CTk):
 
         next_button = ctk.CTkButton(
             self.main_frame, text="next", command=update_changes)
-        next_button.grid(row=2, column=1, sticky='nsew')
+        next_button.grid(row=2, column=1)
 
     def extract_selections(self, word_data: Dict[str, Any], type: str, selections: List[bool], original_data: Any):
         word_data[f'{type}'] = [
@@ -233,7 +237,7 @@ class JishoApp(ctk.CTk):
 
         next_button = ctk.CTkButton(
             self.main_frame, text="next", command=go_next, state='disabled')
-        next_button.grid(row=2, column=1, sticky='nsew')
+        next_button.grid(row=2, column=1)
 
     def show_readings(self, word_data: Dict[str, Any]):
         self.main_frame_init()
@@ -277,7 +281,7 @@ class JishoApp(ctk.CTk):
 
         next_button = ctk.CTkButton(
             self.main_frame, text="next", command=go_next, state='disabled')
-        next_button.grid(row=2, column=1, sticky='nsew')
+        next_button.grid(row=2, column=1)
 
     def show_final_summary(self):
         self.main_frame_init()
@@ -343,14 +347,16 @@ class JishoApp(ctk.CTk):
 
         elif len(candidates) > 1:
             for row, candidate in enumerate(candidates):
+                readings = [f'{kanji} {kana}' for kanji,
+                            kana in candidate.get('readings')]
                 button = ctk.CTkButton(
                     self.scrollable_frame,
-                    text=candidate.get('readings'),
+                    text='・'.join(readings),
                     font=self.defaultFont,
                     command=lambda
                     candidate=candidate:
-                    self.show_readings(candidate))
-
+                    self.show_readings(candidate)
+                )
                 button.grid(row=row, column=3,  columnspan=3,
                             sticky='nsew', padx=10, pady=10)
 
@@ -386,7 +392,7 @@ class JishoApp(ctk.CTk):
                 self.main_frame,
                 text="search again",
                 command=retry
-            ).grid(row=2, column=1, sticky='nsew')
+            ).grid(row=2, column=1)
 
     def on_destroy(self, event: Event) -> None:
         if event.widget != self:
