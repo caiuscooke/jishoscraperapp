@@ -1,21 +1,23 @@
 import csv
-import os
 import shutil
 import tkinter as tk
 from os import path, remove
 from pprint import pp
-from tkinter import Event, filedialog
+from tkinter import END, Event, filedialog
 from typing import Any, Dict, List, Optional, Tuple
 
 import customtkinter as ctk
 from api_tools import api_get
 
 from helpers import Helpers as BetterJson
+import settings as app_setup
 
 
 class JishoApp(ctk.CTk):
     def __init__(self):
         super().__init__()
+
+        self.settings = app_setup.load_settings()
 
         self.title("J2A")
         self.geometry("900x500")
@@ -23,8 +25,11 @@ class JishoApp(ctk.CTk):
         self.bind('<Destroy>', self.on_destroy)
 
         self.defaultFont = ctk.CTkFont(
-            'Microsoft Sans Serif', size=20, weight='normal')
+            self.settings.get('font'), size=self.settings.get('font_size'), weight='normal')
+
         self.main_frame = None
+
+        self.current_word = None
 
         if path.exists('./new_words.csv'):
             remove('./new_words.csv')
@@ -47,6 +52,25 @@ class JishoApp(ctk.CTk):
         self.main_frame.columnconfigure(1, weight=8, uniform='a')
         self.main_frame.rowconfigure((0, 2), weight=1, uniform='a')
         self.main_frame.rowconfigure(1, weight=8, uniform='a')
+
+        if self.current_word:
+            ctk.CTkLabel(
+                self.main_frame,
+                text=f'Searching for: {self.current_word}',
+                font=self.defaultFont
+            ).grid(
+                row=0,
+                column=1,
+                sticky='nsew'
+            )
+
+        settings_button = ctk.CTkButton(
+            self.main_frame,
+            text='Settings',
+            command=self.settings_window,
+            font=self.defaultFont,
+            corner_radius=0)
+        settings_button.grid(row=0, column=0, sticky='nw')
 
         self.scrollable_frame = ctk.CTkScrollableFrame(
             self.main_frame, corner_radius=4, border_width=.2, border_color='lightgrey')
@@ -106,7 +130,7 @@ class JishoApp(ctk.CTk):
         fields = {
             'Kanji': '・'.join(kanji),
             'Kana': '・'.join(kana),
-            'Definitions': '\n'.join(word_data.get('definitions', [])),
+            'Definitions': '<br>'.join(word_data.get('definitions', [])),
             'Parts of Speech': '・'.join(parts_of_speech),
             'JLPT Level': '・'.join(word_data.get('jlpt', [])),
             'Is Common': str(word_data.get('is_common'))
@@ -158,23 +182,33 @@ class JishoApp(ctk.CTk):
             if var.get()
         ]
 
+    def toggle_next(self, bool_vars: List[ctk.BooleanVar], next_button: ctk.CTkButton):
+        if any(var.get() for var in bool_vars):
+            next_button.configure(state='normal')
+        else:
+            next_button.configure(state='disabled')
+
     def show_definitions(self, word_data: Dict[str, Any]):
-        pp(word_data)
+
         self.main_frame_init()
+
         definitions: List[str] = word_data.get('definitions')
+
         if len(definitions) == 1:
             word_data['parts_of_speech'] = [
                 word_data.get('parts_of_speech')[1]]
             return self.show_summary(word_data)
 
+        vars = [ctk.BooleanVar() for _ in range(len(definitions))]
         selections = []
         for row, definition in enumerate(definitions):
-            var = tk.BooleanVar()
             check_button = ctk.CTkCheckBox(
                 self.scrollable_frame,
                 text=definition,
                 font=self.defaultFont,
-                variable=var
+                variable=vars[row],
+                command=lambda:
+                self.toggle_next(vars, next_button)
             )
             check_button.grid(
                 row=row,
@@ -184,7 +218,7 @@ class JishoApp(ctk.CTk):
                 padx=10,
                 pady=10
             )
-            selections.append(var)
+            selections.append(vars[row])
 
         def go_next():
             self.extract_selections(
@@ -198,26 +232,29 @@ class JishoApp(ctk.CTk):
             self.show_summary(word_data)
 
         next_button = ctk.CTkButton(
-            self.main_frame, text="next", command=go_next)
+            self.main_frame, text="next", command=go_next, state='disabled')
         next_button.grid(row=2, column=1, sticky='nsew')
 
     def show_readings(self, word_data: Dict[str, Any]):
-        pp(word_data)
         self.main_frame_init()
+
         readings: List[Tuple[Optional[str], Optional[str]]
                        ] = word_data.get('readings')
+
         if len(readings) == 1:
             return self.show_definitions(word_data)
 
+        vars = [ctk.BooleanVar() for _ in range(len(readings))]
         selections = []
         for row, reading in enumerate(readings):
             kanji, kana = reading
-            var = tk.BooleanVar()
             check_button = ctk.CTkCheckBox(
                 self.scrollable_frame,
                 text=(f'{kanji}「{kana}」'),
                 font=self.defaultFont,
-                variable=var
+                variable=vars[row],
+                command=lambda:
+                self.toggle_next(vars, next_button)
             )
             check_button.grid(
                 row=row,
@@ -227,7 +264,7 @@ class JishoApp(ctk.CTk):
                 padx=10,
                 pady=10
             )
-            selections.append(var)
+            selections.append(vars[row])
 
         def go_next():
             self.extract_selections(
@@ -239,7 +276,7 @@ class JishoApp(ctk.CTk):
             self.show_definitions(word_data)
 
         next_button = ctk.CTkButton(
-            self.main_frame, text="next", command=go_next)
+            self.main_frame, text="next", command=go_next, state='disabled')
         next_button.grid(row=2, column=1, sticky='nsew')
 
     def show_final_summary(self):
@@ -286,9 +323,11 @@ class JishoApp(ctk.CTk):
         if word_number >= len(self.word_list):
             return self.show_final_summary()
 
+        self.current_word = self.word_list[word_number]
+        print(self.current_word)
         self.main_frame_init()
-        word = self.word_list[word_number]
-        url = f'https://jisho.org/api/v1/search/words?keyword={word}'
+        url = (
+            f'https://jisho.org/api/v1/search/words?keyword={self.current_word}')
         json = api_get(url)
         data = [BetterJson(result).better_data for result in json.get('data')]
 
@@ -296,7 +335,8 @@ class JishoApp(ctk.CTk):
             # no matches found at all
             self.main_logic(word_number+1)
 
-        candidates = self.retrieve_candidates(data=data, word=word)
+        candidates = self.retrieve_candidates(
+            data=data, word=self.current_word)
 
         if len(candidates) == 1:
             self.show_readings(candidates[0])
@@ -315,13 +355,57 @@ class JishoApp(ctk.CTk):
                             sticky='nsew', padx=10, pady=10)
 
         else:
-            print('idk what goin on')
-            pass
+            ctk.CTkLabel(
+                self.scrollable_frame,
+                text=(
+                    'The word you searched for has no matching results.\n'
+                    + 'Please enter a different word below'),
+                font=self.defaultFont
+            ).grid(row=1, column=2, columnspan=6, sticky='nsew')
+            text_box = ctk.CTkTextbox(
+                self.scrollable_frame,
+                wrap='word',
+                height=80,
+                font=self.defaultFont)
+            text_box.grid(
+                row=3,
+                column=2,
+                columnspan=6,
+                pady=10,
+                sticky='nsew'
+            )
+
+            def retry():
+                print(self.word_list[self.word_number])
+                self.word_list[self.word_number] = text_box.get(
+                    '1.0', END).strip()
+                print(self.word_list[self.word_number])
+                self.main_logic(self.word_number)
+
+            ctk.CTkButton(
+                self.main_frame,
+                text="search again",
+                command=retry
+            ).grid(row=2, column=1, sticky='nsew')
 
     def on_destroy(self, event: Event) -> None:
         if event.widget != self:
             return
         print('app closed')
+
+    def settings_window(self):
+        _settings_window = ctk.CTkToplevel(self)
+        _settings_window.title("Setup")
+        _settings_window.geometry('900x500')
+        for row, setting in enumerate(self.settings):
+            ctk.CTkLabel(
+                _settings_window,
+                text=setting
+            ).grid(
+                row=row,
+                column=0,
+                sticky='nsew'
+            )
 
 
 if __name__ == "__main__":

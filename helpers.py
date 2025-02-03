@@ -82,7 +82,7 @@ class Helpers:
             if tags[tag_number]:
                 english_definitions[tag_number-1] += tags[tag_number]
         for info_number in info:
-            if tags[info_number]:
+            if info[info_number]:
                 english_definitions[info_number-1] += info[info_number]
 
         return [f'{index+1}) {', '.join(english_definition)}'
