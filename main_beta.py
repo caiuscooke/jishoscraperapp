@@ -335,10 +335,6 @@ class JishoApp(ctk.CTk):
         json = api_get(url)
         data = [BetterJson(result).better_data for result in json.get('data')]
 
-        if len(data) < 1:
-            # no matches found at all
-            self.main_logic(word_number+1)
-
         candidates = self.retrieve_candidates(
             data=data, word=self.current_word)
 
