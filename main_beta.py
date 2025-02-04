@@ -194,14 +194,14 @@ class JishoApp(ctk.CTk):
 
     def show_definitions(self, word_data: Dict[str, Any]):
 
-        self.main_frame_init()
-
         definitions: List[str] = word_data.get('definitions')
 
         if len(definitions) == 1:
             word_data['parts_of_speech'] = [
                 word_data.get('parts_of_speech')[1]]
             return self.show_summary(word_data)
+
+        self.main_frame_init()
 
         vars = [ctk.BooleanVar() for _ in range(len(definitions))]
         selections = []
@@ -240,13 +240,14 @@ class JishoApp(ctk.CTk):
         next_button.grid(row=2, column=1)
 
     def show_readings(self, word_data: Dict[str, Any]):
-        self.main_frame_init()
 
         readings: List[Tuple[Optional[str], Optional[str]]
                        ] = word_data.get('readings')
 
         if len(readings) == 1:
             return self.show_definitions(word_data)
+
+        self.main_frame_init()
 
         vars = [ctk.BooleanVar() for _ in range(len(readings))]
         selections = []
