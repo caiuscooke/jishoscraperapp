@@ -14,6 +14,6 @@ def load_settings():
             return json.load(f)
     except FileNotFoundError:
         return {
-            'font': 'Microsoft Sans Serif',
+            'font': 'メイリオ',
             'font_size': 20
         }

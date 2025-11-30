@@ -7,7 +7,7 @@ from tkinter import END, Event, filedialog
 from typing import Any, Dict, List, Optional, Tuple
 
 import customtkinter as ctk
-from api_tools import api_get
+from requests import get
 
 from helpers import Helpers as BetterJson
 import settings as app_setup
@@ -65,13 +65,13 @@ class JishoApp(ctk.CTk):
                 sticky='nsew'
             )
 
-        settings_button = ctk.CTkButton(
-            self.main_frame,
-            text='Settings',
-            command=self.settings_window,
-            font=self.defaultFont,
-            corner_radius=0)
-        settings_button.grid(row=0, column=0, sticky='nw')
+        # settings_button = ctk.CTkButton(
+        #     self.main_frame,
+        #     text='Settings',
+        #     command=self.settings_window,
+        #     font=self.defaultFont,
+        #     corner_radius=0)
+        # settings_button.grid(row=0, column=0, sticky='nw')
 
         self.scrollable_frame = ctk.CTkScrollableFrame(
             self.main_frame, corner_radius=4, border_width=.2, border_color='lightgrey')
@@ -333,7 +333,7 @@ class JishoApp(ctk.CTk):
         self.main_frame_init()
         url = (
             f'https://jisho.org/api/v1/search/words?keyword={self.current_word}')
-        json = api_get(url)
+        json = get(url).json()
         data = [BetterJson(result).better_data for result in json.get('data')]
 
         candidates = self.retrieve_candidates(
